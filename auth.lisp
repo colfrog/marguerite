@@ -1,8 +1,5 @@
 (in-package :marguerite)
 
-(defun is-logged-in ()
-  (session-value :username))
-
 (defun credentials-valid (username password)
   (let ((pass-md5 (sqlite:execute-single *db* "SELECT password_hash FROM users WHERE name = ?" username)))
     (when pass-md5 (equal (get-md5 password) pass-md5))))
