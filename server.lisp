@@ -1,7 +1,6 @@
 (in-package :marguerite)
 
 (defparameter *port* 4267)
-(defparameter *default-title* "Raven")
 (defvar *db-path* "db.sqlite")
 (defvar *db* (sqlite:connect *db-path*))
 
@@ -11,57 +10,78 @@
 (defun is-logged-in ()
   (session-value :username))
 
+(push (create-static-file-dispatcher-and-handler
+       "/style.css" "public/style.css")
+      hunchentoot:*dispatch-table*)
+
+(push (create-static-file-dispatcher-and-handler
+       "/favicon.ico" "public/favicon.ico")
+      hunchentoot:*dispatch-table*)
+
+(push (create-static-file-dispatcher-and-handler
+       "/background.jpg" "public/background.jpg")
+      hunchentoot:*dispatch-table*)
+
 (defmacro with-layout ((title) &body body)
-  (let* ((header-stuff (car (execute-to-list *db* "select header, presentation from home")))
-	 (header (car header-stuff))
-	 (presentation (cadr header-stuff)))
   `(with-html-output-to-string (*standard-output* nil :prologue t)
-     (:html
-      (:head
-       (:meta :name "viewport" :content "width=device-width,initial-scale=1")
-       (:link :rel "stylesheet" :href "style.css")
-       (:title (str (if ,title (concatenate 'string ,*default-title* ,title) ,*default-title*))))
-      (:body
-       (:main
-	(:header
-	 (if (is-logged-in)
-	     (:a :href "/logout" :style "color: red" (:h1 (str ,header)))
-	     (:a :href "/login" (:h1 (str ,header))))
-	 (if (is-logged-in)
-	     (htm
-	      (:form
-	       :id "change-presentation" :method "post" :action "change-presentation"
-	       (:input :type "text" :name "text" :value ,presentation)
-	       (:input :type "submit")))
-	     (htm (:h5 (str ,presentation)))))
-	(:article ,@body)))))))
+     (let* ((header-stuff (car (execute-to-list *db* "select header, presentation from home")))
+	    (categories (execute-to-list *db* "select distinct category from images order by category asc"))
+	    (header (car header-stuff))
+	    (presentation (cadr header-stuff)))
+       (htm
+	(:html
+	 (:head
+	  (:meta :name "viewport" :content "width=device-width,initial-scale=1")
+	  (:link :rel "stylesheet" :href "style.css")
+	  (:title (str (if ,title (concatenate 'string header ,title) header))))
+	 (:body
+	  (:main
+	   (:header
+	    (if (is-logged-in)
+		(htm (:a :href "/logout" :style "color: red" (:h1 (str header))))
+		(htm (:a :href "/login" (:h1 (str header)))))
+	    (if (is-logged-in)
+		(htm
+		 (:form
+		  :id "change-presentation" :method "post" :action "change-presentation"
+		  (:input :type "text" :name "text" :value presentation)
+		  (:input :type "submit")))
+		(htm (:h5 (str presentation)))))
+	   (:nav
+	    (dolist (category categories)
+	      (htm
+	       (:a :href (concatenate 'string "/#" (car category)) (str (car category))))))
+	   (:article ,@body))
+	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with love and lisp"))))))))
 
 (define-easy-handler (home-page :uri "/") ()
-  (let ((pictures (execute-to-list *db* "select id, category, pos from images order by category asc, pos asc"))
-	(categories (execute-to-list *db* "select unique(category) from images order by category asc")))
+  (let ((pictures (execute-to-list *db* "select id, category, pos from images order by category asc, pos asc")))
     (with-layout (nil)
       (:div
+       :id "main-view"
        (when (is-logged-in)
-	 (:form
-	  :id "add-image" :method "post" :action "add-image" :enctype "multipart/form-data"
-	  (:input :type "text" :name "id")
-	  (:br)
-	  (:input :type "text" :name "category")
-	  (:br)
-	  (:input :type "file" :name "data" :accept "image/png,image/jpg")
-	  (:br)
-	  (:input :type "submit")))
+	 (htm
+	  (:h3 "Add an image")
+	  (:form
+	   :id "add-image" :method "post" :action "add-image" :enctype "multipart/form-data"
+	   (:label :for "category" "Category: ")
+	   (:input :type "text" :name "category")
+	   (:br)
+	   (:input :type "file" :name "file" :accept "image/png,image/jpg")
+	   (:br)
+	   (:input :type "submit"))))
        (let ((current pictures))
 	 (dolist (category categories)
 	   (htm
 	    (:div
-	     :id (str (car category))
+	     :id (car category)
 	     (:h3 (str (car category)))
-	     (do* ((category-pictures current (cdr category-pictures))
-		   (picture (car category-pictures) (when category-pictures (car category-pictures))))
-		  ((or (null category-pictures) (not (equal (cadr picture) category)))
-		   (setf current category-pictures))
-	       (htm (:img :href (concatenate 'string "/i/" (car picture)))))))))))))
+	     (:div :class "image-list"
+		   (do* ((category-pictures current (cdr category-pictures))
+			 (picture (car category-pictures) (when category-pictures (car category-pictures))))
+			((or (null category-pictures) (not (equal (cadr picture) (car category))))
+			 (setf current category-pictures))
+		     (htm (:img :src (concatenate 'string "/i/" (car picture))))))))))))))
 
 (hunchentoot:define-easy-handler
     (image
@@ -76,3 +96,19 @@
     (sqlite:execute-single
      *db*
      "select file from images where id = ?" image-name)))
+
+(hunchentoot:define-easy-handler (add-image :uri "/add-image")
+    ((category :request-type :post)
+     (file :request-type :post))
+  (when (and (is-logged-in) category file)
+    (with-open-file (stream (car file) :element-type 'unsigned-byte)
+      (let ((buffer (make-array (file-length stream) :initial-element nil)))
+	(read-sequence buffer stream)
+	(execute-non-query *db* "insert into images (id, pos, category, file) values (?1, (select count(*) from images where category = ?2), ?2, ?3)" (cadr file) category buffer)))
+    (redirect (concatenate 'string "/#" category))))
+
+(hunchentoot:define-easy-handler (change-presentation :uri "/change-presentation")
+    ((text :request-type :post))
+  (when (and (is-logged-in) text)
+    (execute-non-query *db* "update home set presentation = ?" text)
+    (redirect "/")))

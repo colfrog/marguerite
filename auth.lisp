@@ -1,5 +1,13 @@
 (in-package :marguerite)
 
+(defun get-md5 (s)
+  "Returns the md5 sum of s as a string"
+  (let ((sum (md5:md5sum-string s))
+	(out ""))
+    (dotimes (i (length sum))
+      (setf out (concatenate 'string out (format nil "~2,'0x" (aref sum i)))))
+    out))
+
 (defun credentials-valid (username password)
   (let ((pass-md5 (sqlite:execute-single *db* "SELECT password_hash FROM users WHERE name = ?" username)))
     (when pass-md5 (equal (get-md5 password) pass-md5))))
@@ -16,12 +24,17 @@
 		(redirect "/"))
 	      (setf error-message "Invalid username or password")))
 	(with-layout ("Login")
-	  (when error-message
-	    (htm (:h5 :class "error" (str error-message))))
-	  (:form :method "POST" :action "/login"
-		 (:input :type "text" :name "username")
-		 (:input :type "password" :name "password")
-		 (:input :type "submit"))))))
+	  (:div
+	   (when error-message
+	     (htm (:h5 :style "color:red;" (str error-message))))
+	   (:form :method "POST" :action "/login"
+		  (:label :for "username" "Username: ")
+		  (:input :type "text" :name "username")
+		  (:br)
+		  (:label :for "password" "Password: ")
+		  (:input :type "password" :name "password")
+		  (:br)
+		  (:input :type "submit")))))))
 
 (define-easy-handler (logout-page :uri "/logout") ()
   (remove-session (start-session))

@@ -4,6 +4,7 @@
   :maintainer "Laurent Cimon <laurent@nilio.ca>"
   :license "bsd-2-clause"
   :description "Raven's web page"
-  :components ((:file "server")
+  :components ((:file "package")
+	       (:file "server")
 	       (:file "auth"))
-  :depends-on (#:hunchentoot #:cl-who #:sqlite #:quri #:md5))
+  :depends-on (#:hunchentoot #:cl-who #:sqlite #:md5))
