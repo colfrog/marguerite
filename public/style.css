@@ -99,6 +99,19 @@ nav a {
     margin: 24px;
 }
 
+#image-overlay {
+    visibility: hidden;
+    position: fixed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 40%);
+    top: 0px;
+    left: 0px;
+    height: 100vh;
+    width: 100vw;
+}
+
 footer {
     color: #dcdccc;
     text-align: right;

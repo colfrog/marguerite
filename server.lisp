@@ -15,6 +15,10 @@
       hunchentoot:*dispatch-table*)
 
 (push (create-static-file-dispatcher-and-handler
+       "/imageOverlay.js" "public/imageOverlay.js")
+      hunchentoot:*dispatch-table*)
+
+(push (create-static-file-dispatcher-and-handler
        "/favicon.ico" "public/favicon.ico")
       hunchentoot:*dispatch-table*)
 
@@ -52,7 +56,9 @@
 	      (htm
 	       (:a :href (concatenate 'string "/#" (car category)) (str (car category))))))
 	   (:article ,@body))
-	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with love and lisp"))))))))
+	  (:div :id "image-overlay" :onclick "closeOverlay()")
+	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with love and lisp"))
+	  (:script :src "imageOverlay.js")))))))
 
 (define-easy-handler (home-page :uri "/") ()
   (let ((pictures (execute-to-list *db* "select id, category, pos from images order by category asc, pos asc")))
@@ -81,7 +87,8 @@
 			 (picture (car category-pictures) (when category-pictures (car category-pictures))))
 			((or (null category-pictures) (not (equal (cadr picture) (car category))))
 			 (setf current category-pictures))
-		     (htm (:img :src (concatenate 'string "/i/" (car picture))))))))))))))
+		     (htm (:img :src (concatenate 'string "/i/" (car picture))
+				:onclick (concatenate 'string "showOverlay(\"" "/i/" (car picture) "\")")))))))))))))
 
 (hunchentoot:define-easy-handler
     (image
