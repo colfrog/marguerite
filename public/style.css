@@ -130,7 +130,7 @@ footer {
 }
 
 @media screen and (max-width: 800px) {
-    article {
+    main {
         grid-template:
 	    'header' 80px
 	    'article' 1fr;
