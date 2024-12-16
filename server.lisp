@@ -86,7 +86,13 @@
 	   (htm
 	    (:div
 	     :id (car category)
-	     (:h3 (str (car category)))
+	     (if (is-logged-in)
+		 (:form
+		  :id "change-category-name" :method "post" :action "change-category-name"
+		  (:input :type "hidden" :name "old-category" :value (car category))
+		  (:input :type "text" :name "new-category" :value (car category))
+		  (:input :type "submit" :value "Change category name"))
+		 (:h3 (str (car category))))
 	     (:div :class "image-list"
 		   (do* ((category-pictures current (cdr category-pictures))
 			 (picture (car category-pictures) (when category-pictures (car category-pictures))))
@@ -166,4 +172,11 @@
     ((id :request-type :post))
   (when (and (is-logged-in) id)
     (execute-non-query *db* "delete from images where id = ?" id)
+    (redirect "/")))
+
+(hunchentoot:define-easy-handler (change-category-name :uri "change-category-name")
+    ((old-category :request-type :post)
+     (new-category :request-type :post))
+  (when (and (logged-in) old-category new-category)
+    (execute-non-query *db* "update images set category = ? where category = ?" new-category old-category)
     (redirect "/")))
