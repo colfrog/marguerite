@@ -128,3 +128,21 @@ footer {
     align-self: end;
     margin-right: 16px;
 }
+
+@media screen and (max-width: 800px) {
+    article {
+        grid-template:
+	    'header' 80px
+	    'article' 1fr;
+    }
+
+    nav {
+	visibility: hidden;
+    }
+
+    .image-list img {
+	max-width: 240px;
+	object-fit: scale-down;
+	margin: 12px;
+    }
+}
