@@ -61,7 +61,7 @@
 	       (:a :href (concatenate 'string "/#" (car category)) (str (car category))))))
 	   (:article ,@body))
 	  (:div :id "image-overlay" :onclick "closeOverlay()")
-	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with love and lisp"))
+	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with &hearts; and &lambda;"))
 	  (:script :src "imageOverlay.js")
 	  (when (is-logged-in) (htm (:script :src "imageReordering.js")))))))))
 
