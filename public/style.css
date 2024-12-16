@@ -112,6 +112,12 @@ nav a {
     width: 100vw;
 }
 
+#image-overlay img {
+    object-fit: contain;
+    max-height: 90vh;
+    max-width: 90vw;
+}
+
 footer {
     color: #dcdccc;
     text-align: right;

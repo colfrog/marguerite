@@ -19,6 +19,10 @@
       hunchentoot:*dispatch-table*)
 
 (push (create-static-file-dispatcher-and-handler
+       "/imageReordering.js" "public/imageReordering.js")
+      hunchentoot:*dispatch-table*)
+
+(push (create-static-file-dispatcher-and-handler
        "/favicon.ico" "public/favicon.ico")
       hunchentoot:*dispatch-table*)
 
@@ -58,7 +62,8 @@
 	   (:article ,@body))
 	  (:div :id "image-overlay" :onclick "closeOverlay()")
 	  (:footer (:small (:b "&copy; Laurent Cimon 2024") (:br) "Designed with love and lisp"))
-	  (:script :src "imageOverlay.js")))))))
+	  (:script :src "imageOverlay.js")
+	  (when (is-logged-in) (htm (:script :src "imageReordering.js")))))))))
 
 (define-easy-handler (home-page :uri "/") ()
   (let ((pictures (execute-to-list *db* "select id, category, pos from images order by category asc, pos asc")))
@@ -88,7 +93,11 @@
 			((or (null category-pictures) (not (equal (cadr picture) (car category))))
 			 (setf current category-pictures))
 		     (htm (:img :src (concatenate 'string "/i/" (car picture))
-				:onclick (concatenate 'string "showOverlay(\"" "/i/" (car picture) "\")")))))))))))))
+				:id (car picture)
+				:draggable "false"
+				:onmousedown (if (is-logged-in)
+						 (concatenate 'string "dragStart(\"" (car picture) "\")")
+						 (concatenate 'string "showOverlay(\"" "/i/" (car picture) "\")"))))))))))))))
 
 (hunchentoot:define-easy-handler
     (image
@@ -119,3 +128,14 @@
   (when (and (is-logged-in) text)
     (execute-non-query *db* "update home set presentation = ?" text)
     (redirect "/")))
+
+(hunchentoot:define-easy-handler (update-image-position :uri "/update-image-position")
+    ((id :request-type :post)
+     (pos :request-type :post)
+     (category :request-type :post))
+  (when (and (is-logged-in) id pos category)
+    (print pos)
+    (print category)
+    (print id)
+    (execute-non-query *db* "update images set pos = pos + 1 where category = ? and pos >= ?" category pos)
+    (execute-non-query *db* "update images set pos = ? where id = ?" (parse-integer pos) id)))
