@@ -52,7 +52,7 @@
 		(htm
 		 (:form
 		  :id "change-presentation" :method "post" :action "change-presentation"
-		  (:input :type "text" :name "text" :value presentation)
+		  (:input :type "text" :style "width: 50%" :name "text" :value presentation)
 		  (:input :type "submit")))
 		(htm (:h5 (str presentation)))))
 	   (:nav
@@ -92,12 +92,30 @@
 			 (picture (car category-pictures) (when category-pictures (car category-pictures))))
 			((or (null category-pictures) (not (equal (cadr picture) (car category))))
 			 (setf current category-pictures))
-		     (htm (:img :src (concatenate 'string "/i/" (car picture))
-				:id (car picture)
-				:draggable "false"
-				:onmousedown (if (is-logged-in)
-						 (concatenate 'string "dragStart(\"" (car picture) "\")")
-						 (concatenate 'string "showOverlay(\"" "/i/" (car picture) "\")"))))))))))))))
+		     (htm (:div
+			   :id (car picture) :class "image-div" :style (when (is-logged-in) "border: 2px solid red")
+			   (:img :src (concatenate 'string "/i/" (car picture))
+				 :id (car picture)
+				 :draggable "false"
+				 :onmousedown (if (is-logged-in)
+						  (concatenate 'string "dragStart(\"" (car picture) "\")")
+						  (concatenate 'string "showOverlay(\"" "/i/" (car picture) "\")")))
+			   (when (is-logged-in)
+			     (htm
+			      (:form
+			       :id "change-category" :method "post" :action "change-category"
+			       (:input :type "hidden" :name "id" :value (car picture))
+			       (:label :for "category" "Category: ")
+			       (:select
+				:size "1" :name "category"
+				(dolist (category-option categories)
+				  (htm (:option :value (car category-option) (str (car category-option))))))
+			       (:br)
+			       (:input :type "submit" :value "Change category"))
+			      (:form
+			       :id "delete-image" :method "post" :action "delete-image"
+			       (:input :type "hidden" :name "id" :value (car picture))
+			       (:input :type "submit" :value "Delete"))))))))))))))))
 
 (hunchentoot:define-easy-handler
     (image
@@ -134,8 +152,18 @@
      (pos :request-type :post)
      (category :request-type :post))
   (when (and (is-logged-in) id pos category)
-    (print pos)
-    (print category)
-    (print id)
     (execute-non-query *db* "update images set pos = pos + 1 where category = ? and pos >= ?" category pos)
     (execute-non-query *db* "update images set pos = ? where id = ?" (parse-integer pos) id)))
+
+(hunchentoot:define-easy-handler (change-category :uri "/change-category")
+    ((id :request-type :post)
+     (category :request-type :post))
+  (when (and (is-logged-in) id category)
+    (execute-non-query *db* "update images set category = ? where id = ?" category id)
+    (redirect "/")))
+
+(hunchentoot:define-easy-handler (delete-image :uri "/delete-image")
+    ((id :request-type :post))
+  (when (and (is-logged-in) id)
+    (execute-non-query *db* "delete from images where id = ?" id)
+    (redirect "/")))

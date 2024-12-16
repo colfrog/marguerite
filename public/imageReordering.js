@@ -20,10 +20,10 @@ function dragEnd(e) {
 
     let index = null, category = null;
     // Get the target category
-    category = e.target.closest('img').parentNode.parentNode;
+    category = e.target.closest('div').parentNode.parentNode;
 
     let targetImageList = category.getElementsByClassName('image-list')[0];
-    let images = targetImageList.getElementsByTagName('img');
+    let images = targetImageList.getElementsByTagName('div');
     const x = e.clientX, y = e.clientY;
     for (let i = 0; i < images.length; i++) {
         let rect = images[i].getBoundingClientRect();
