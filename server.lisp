@@ -178,6 +178,6 @@
 (hunchentoot:define-easy-handler (change-category-name :uri "change-category-name")
     ((old-category :request-type :post)
      (new-category :request-type :post))
-  (when (and (logged-in) old-category new-category)
+  (when (and (is-logged-in) old-category new-category)
     (execute-non-query *db* "update images set category = ? where category = ?" new-category old-category)
     (redirect "/")))
