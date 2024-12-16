@@ -94,7 +94,7 @@ nav a {
 
 .image-list img {
     max-width: 300px;
-    max-height: 600px;
+    max-height: 300px;
     object-fit: contain;
     margin: 24px;
 }

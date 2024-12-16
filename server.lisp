@@ -175,7 +175,7 @@
     (execute-non-query *db* "delete from images where id = ?" id)
     (redirect "/")))
 
-(hunchentoot:define-easy-handler (change-category-name :uri "change-category-name")
+(hunchentoot:define-easy-handler (change-category-name :uri "/change-category-name")
     ((old-category :request-type :post)
      (new-category :request-type :post))
   (when (and (is-logged-in) old-category new-category)
