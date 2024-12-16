@@ -132,17 +132,21 @@ footer {
 @media screen and (max-width: 800px) {
     main {
         grid-template:
-	    'header' 80px
-	    'article' 1fr;
+            'header' 80px
+            'article' calc(100% - 80px) / 100%;
+    }
+
+    article {
+        border-radius: 0 0 20px 20px;
     }
 
     nav {
-	visibility: hidden;
+        visibility: hidden;
     }
 
     .image-list img {
-	max-width: 240px;
-	object-fit: scale-down;
-	margin: 12px;
+        max-width: 240px;
+        object-fit: scale-down;
+        margin: 12px;
     }
 }
