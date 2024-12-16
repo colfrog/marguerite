@@ -87,12 +87,13 @@
 	    (:div
 	     :id (car category)
 	     (if (is-logged-in)
-		 (:form
+		 (htm
+		  (:form
 		  :id "change-category-name" :method "post" :action "change-category-name"
 		  (:input :type "hidden" :name "old-category" :value (car category))
 		  (:input :type "text" :name "new-category" :value (car category))
-		  (:input :type "submit" :value "Change category name"))
-		 (:h3 (str (car category))))
+		  (:input :type "submit" :value "Change category name")))
+		 (htm (:h3 (str (car category)))))
 	     (:div :class "image-list"
 		   (do* ((category-pictures current (cdr category-pictures))
 			 (picture (car category-pictures) (when category-pictures (car category-pictures))))
