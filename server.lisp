@@ -79,7 +79,7 @@
 	     (:br)
 	     (:input :type "submit")))
 	   (htm
-	    (:p :id "article-text" (esc article-text))))
+	    (:pre :id "article-text" (esc article-text))))
        (when (is-logged-in)
 	 (htm
 	  (:h3 "Add an image")
@@ -195,4 +195,5 @@
 (define-easy-handler (edit-text :uri "/edit-text")
     ((text :request-type :post))
   (when (and (is-logged-in) text)
-    (execute-non-query *db* "update home set article = ?" text)))
+    (execute-non-query *db* "update home set article = ?" text)
+    (redirect "/")))
