@@ -32,10 +32,11 @@
 
 (defmacro with-layout ((title) &body body)
   `(with-html-output-to-string (*standard-output* nil :prologue t)
-     (let* ((header-stuff (car (execute-to-list *db* "select header, presentation from home")))
+     (let* ((header-stuff (car (execute-to-list *db* "select header, presentation, article from home")))
 	    (categories (execute-to-list *db* "select distinct category from images order by category asc"))
 	    (header (car header-stuff))
-	    (presentation (cadr header-stuff)))
+	    (presentation (cadr header-stuff))
+	    (article-text (caddr header-stuff)))
        (htm
 	(:html
 	 (:head
@@ -70,6 +71,15 @@
     (with-layout (nil)
       (:div
        :id "main-view"
+       (if (is-logged-in)
+	   (htm
+	    (:form
+	     :id "edit-text" :method "post" :action "edit-text"
+	     (:textarea :name "text" :rows "10" :cols "80" (str article-text))
+	     (:br)
+	     (:input :type "submit")))
+	   (htm
+	    (:p :id "article-text" (esc article-text))))
        (when (is-logged-in)
 	 (htm
 	  (:h3 "Add an image")
@@ -181,3 +191,8 @@
   (when (and (is-logged-in) old-category new-category)
     (execute-non-query *db* "update images set category = ? where category = ?" new-category old-category)
     (redirect "/")))
+
+(define-easy-handler (edit-text :uri "/edit-text")
+    ((text :request-type :post))
+  (when (and (is-logged-in) text)
+    (execute-non-query *db* "update home set article = ?" text)))
