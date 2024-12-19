@@ -86,6 +86,10 @@ nav a {
     margin-bottom: 12px;
 }
 
+#article-text {
+    margin: 24px 10%;
+}
+
 .image-list {
     display: flex;
     flex-direction: row;
@@ -148,5 +152,9 @@ footer {
         max-width: 240px;
         object-fit: scale-down;
         margin: 12px;
+    }
+
+    #article-text {
+	margin: 24px 0;
     }
 }
