@@ -58,11 +58,6 @@ article {
     border-radius: 0 0 0 20px;
     padding: 2%;
     overflow-y: scroll;
-    scrollbar-width: none;
-}
-
-article::-webkit-scrollbar {
-    display: none;
 }
 
 nav {
@@ -72,14 +67,9 @@ nav {
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
-    scrollbar-width: none;
     padding-top: 24px;
     padding-bottom: 24px;
     border-radius: 0 0 20px 0;
-}
-
-nav::-webkit-scrollbar {
-    display: none;
 }
 
 nav a {
@@ -87,6 +77,8 @@ nav a {
 }
 
 #article-text {
+    font-size: 15px;
+    font-family: sans-serif;
     margin: 24px 10%;
 }
 
