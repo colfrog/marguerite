@@ -2,10 +2,16 @@
 
 (defparameter *port* 4267)
 (defvar *db-path* "db.sqlite")
-(defvar *db* (sqlite:connect *db-path*))
+(defvar *db* nil)
 
-(defun start-marguerite ()
-  (start (make-instance 'hunchentoot:easy-acceptor :port *port*)))
+(defun start-marguerite (&key (wait t))
+  (setf *db* (sqlite:connect *db-path*))
+  (start (make-instance 'hunchentoot:easy-acceptor :port *port*))
+  (when wait
+    (sb-thread:join-thread
+      (find-if
+        (lambda (thread) (string= (sb-thread:thread-name thread) "hunchentoot-listener-*:4267"))
+        (sb-thread:list-all-threads)))))
 
 (defun is-logged-in ()
   (session-value :username))
