@@ -204,6 +204,7 @@
     ((id :request-type :post))
   (when (and (is-logged-in) id)
     (execute-non-query *db* "delete from images where id = ?" id)
+    (execute-non-query *db* "delete from thumbs where id = ?" id)
     (redirect "/")))
 
 (hunchentoot:define-easy-handler (change-category-name :uri "/change-category-name")
