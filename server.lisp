@@ -117,7 +117,7 @@
 			 (setf current category-pictures))
 		     (htm (:div
 			   :id (car picture) :class "image-div" :style (when (is-logged-in) "border: 2px solid red")
-			   (:img :src (concatenate 'string "/i/" (car picture))
+			   (:img :src (concatenate 'string "/thumbs/" (car picture))
 				 :id (car picture)
 				 :draggable "false"
 				 :onmousedown (if (is-logged-in)
@@ -154,6 +154,20 @@
      *db*
      "select file from images where id = ?" image-name)))
 
+(hunchentoot:define-easy-handler
+    (thumb
+     :uri (lambda (request)
+	    (let ((uri (hunchentoot:request-uri request)))
+	      (string= (and (> (length uri) 8) (subseq uri 0 7)) "/thumbs"))))
+    ()
+  (setf (hunchentoot:content-type*) "image/png")
+  (let ((image-name
+	 (url-decode
+	  (subseq (hunchentoot:request-uri hunchentoot:*request*) 8))))
+    (sqlite:execute-single
+     *db*
+     "select file from thumbs where id = ?" image-name)))
+
 (hunchentoot:define-easy-handler (add-image :uri "/add-image")
     ((category :request-type :post)
      (file :request-type :post))
@@ -162,6 +176,7 @@
       (let ((buffer (make-array (file-length stream) :initial-element nil)))
 	(read-sequence buffer stream)
 	(execute-non-query *db* "insert into images (id, pos, category, file) values (?1, (select count(*) from images where category = ?2), ?2, ?3)" (cadr file) category buffer)))
+    (make-thread (lambda () (uiop:run-program "./make-thumbnails.py" :output t)))
     (redirect (concatenate 'string "/#" category))))
 
 (hunchentoot:define-easy-handler (change-presentation :uri "/change-presentation")

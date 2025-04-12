@@ -7,7 +7,7 @@
   :components ((:file "package")
 	       (:file "server")
 	       (:file "auth"))
-  :depends-on (#:hunchentoot #:cl-who #:sqlite #:md5)
+  :depends-on (#:hunchentoot #:cl-who #:sqlite #:md5 #:bordeaux-threads)
   :build-operation "program-op"
   :build-pathname "marguerite"
   :entry-point "marguerite:start-marguerite")
